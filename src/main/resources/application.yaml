@@ -1,0 +1,15 @@
+server:
+  port: ${SERVER_PORT:9652}
+  servlet:
+    charset: UTF-8
+    force: true
+    enabled: true
+    context-path: /api
+  # ??Tomcat??????
+tomcat:
+  threads:
+    max: 200 # ???????
+  uri-encoding: UTF-8
+  connection-timeout: 2000000 # ??????
+  max-connections: 10000 # ?????
+  accept-count: 100 # ??????
