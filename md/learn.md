@@ -67,3 +67,31 @@ futureChatResponse.join();
 
 
 
+##### 模型参数
+
+根据你选择的模型和提供商，你可以调整许多参数，这些参数将决定：
+
+- **模型的输出**：生成内容（文本、图片）的创造性或确定性水平、生成内容的数量等。
+- **连接性**：基础 URL、授权密钥、超时、重试、日志记录等。
+
+通常，你可以在模型提供商的网站上找到所有参数及其含义。
+例如，OpenAI API 的参数可以在 [官方文档](https://platform.openai.com/docs/api-reference/chat)（最新版本）中找到，包括以下选项：
+
+| 参数               | 描述                                                         | 类型      |
+| ------------------ | ------------------------------------------------------------ | --------- |
+| `modelName`        | 要使用的模型名称（例如 gpt-4o、gpt-4o-mini 等）。            | `String`  |
+| `temperature`      | 采样温度，取值范围 0 到 2。较高的值（如 0.8）会使输出更随机，较低的值（如 0.2）会使输出更专注、更确定性。 | `Double`  |
+| `maxTokens`        | 在聊天补全中可以生成的最大 token 数。                        | `Integer` |
+| `frequencyPenalty` | 范围 -2.0 到 2.0。正值会根据 token 在文本中已出现的频率来惩罚新 token，从而降低模型逐字重复相同行的可能性。 | `Double`  |
+
+```
+OpenAiChatModel model = OpenAiChatModel.builder()
+        .apiKey(System.getenv("OPENAI_API_KEY"))
+        .modelName("gpt-4o-mini")
+        .temperature(0.3)
+        .timeout(ofSeconds(60))
+        .logRequests(true)
+        .logResponses(true)
+        .build();
+```
+
