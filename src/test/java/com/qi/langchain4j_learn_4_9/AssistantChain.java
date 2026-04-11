@@ -6,8 +6,12 @@ import dev.langchain4j.data.message.Content;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
+import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
+import dev.langchain4j.model.moderation.Moderation;
+import dev.langchain4j.model.moderation.ModerationModel;
 import dev.langchain4j.model.openai.OpenAiChatModel;
+import dev.langchain4j.model.openai.OpenAiModerationModel;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
 import dev.langchain4j.model.output.FinishReason;
 import dev.langchain4j.model.output.TokenUsage;
@@ -28,8 +32,10 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.function.UnaryOperator;
 
 import static dev.langchain4j.model.chat.Capability.RESPONSE_FORMAT_JSON_SCHEMA;
+import static dev.langchain4j.model.openai.OpenAiModerationModelName.TEXT_MODERATION_LATEST;
 
 interface Assistant {
     String chat(String userMessage);
@@ -112,7 +118,6 @@ class Tools {
     String imply(String text) {
         return text.equals("歌未竟") ? "东方白" : "只有天知道";
     }
-
 }
 @SpringBootTest
 public class AssistantChain {
@@ -329,5 +334,62 @@ public class AssistantChain {
                 .start();
         future.join();
     }
-
+    //配置审核模型
+    @Test
+    void Test13 (){
+        OpenAiModerationModel moderationModel = OpenAiModerationModel.builder()
+                .apiKey("sk-wlwldolewwramfvxtxdkpkoqgfryvyixovzhnkdqysjxvooz")
+                .modelName(TEXT_MODERATION_LATEST)
+                .build();
+        StreamingChatModel chatModel = OpenAiStreamingChatModel.builder()
+                .apiKey("sk-wlwldolewwramfvxtxdkpkoqgfryvyixovzhnkdqysjxvooz")
+                .modelName("deepseek-ai/DeepSeek-V3.2")
+                .baseUrl("https://api.siliconflow.cn/v1")
+                .build();
+        TokenStreamAssistant assistant = AiServices.builder(TokenStreamAssistant.class)
+                .moderationModel(moderationModel)  // 配置审核模型
+                .streamingChatModel(chatModel) // 关键：使用 streamingChatModel 方法
+                .build();
+        CompletableFuture<ChatResponse> future = new CompletableFuture<>();
+        TokenStream tokenStream = assistant.chat("和我聊聊张国焘的兵变吧");
+        tokenStream.onPartialResponse(System.out::print)
+                .onCompleteResponse(response -> future.complete(response))
+                .onError(future::completeExceptionally)
+                .start();
+        future.join();
+    }
+    @Test
+    void Test14 (){
+        StreamingChatModel chatModel = OpenAiStreamingChatModel.builder()
+                .apiKey("sk-wlwldolewwramfvxtxdkpkoqgfryvyixovzhnkdqysjxvooz")
+                .modelName("deepseek-ai/DeepSeek-V3.2")
+                .baseUrl("https://api.siliconflow.cn/v1")
+                .build();
+        UnaryOperator<ChatRequest> transformer = request -> {
+            // 获取原始消息列表
+            var originalMessages = request.messages();
+            // 创建可变列表
+            var newMessages = new ArrayList<>(originalMessages);
+            // 在最前面插入系统消息
+            newMessages.add(0, dev.langchain4j.data.message.SystemMessage.from("必须只输出：“咕咕嘎嘎，我是臭企鹅”，不要输出任何其他内容。"));
+            // 返回一个新的 ChatRequest 对象
+            return ChatRequest.builder()
+                    .messages(newMessages)
+                    .modelName(request.modelName())
+                    .temperature(request.temperature())
+                    .maxOutputTokens(request.maxOutputTokens())
+                    .build();
+        };
+        TokenStreamAssistant assistant = AiServices.builder(TokenStreamAssistant.class)
+                .streamingChatModel(chatModel) // 关键：使用 streamingChatModel 方法
+                .chatRequestTransformer(transformer)
+                .build();
+        CompletableFuture<ChatResponse> future = new CompletableFuture<>();
+        TokenStream tokenStream = assistant.chat("说说Java的spring注解");
+        tokenStream.onPartialResponse(System.out::print)
+                .onCompleteResponse(response -> future.complete(response))
+                .onError(future::completeExceptionally)
+                .start();
+        future.join();
+    }
 }

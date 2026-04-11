@@ -120,12 +120,10 @@ public class MemoryTest {
     void Test5() {
         // 只保留最近 3 条消息
         MessageWindowChatMemory memory = MessageWindowChatMemory.withMaxMessages(3);
-
         memory.add(UserMessage.from("1"));
         memory.add(UserMessage.from("2"));
         memory.add(UserMessage.from("3"));
         memory.add(UserMessage.from("4")); // 第 1 条会被挤出
-
         System.out.println("当前消息数量：" + memory.messages().size()); // 3
         memory.messages().forEach(System.out::println); // 2,3,4
     }

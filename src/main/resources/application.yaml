@@ -13,3 +13,33 @@ tomcat:
   connection-timeout: 2000000 # ??????
   max-connections: 10000 # ?????
   accept-count: 100 # ??????
+
+logging:
+  level:
+    root: info
+    com.qi.langchain4j_learn_4_9: debug
+
+spring:
+  mail:
+    # QQ邮箱的SMTP服务器地址
+    host: smtp.qq.com
+    # SSL加密端口，推荐使用465
+    port: 465
+    # 你的完整邮箱地址
+    username: 2662480975@qq.com
+    # 这里填的是上面获取的16位授权码，不是QQ登录密码
+    password: 1111111111111
+    # 默认编码
+    default-encoding: UTF-8
+    properties:
+      mail:
+        smtp:
+          # 启用认证
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          ssl:
+            enable: true
+          socketFactory:
+            class: javax.net.ssl.SSLSocketFactory
